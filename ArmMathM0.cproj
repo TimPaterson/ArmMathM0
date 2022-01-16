@@ -145,7 +145,8 @@ echo F|xcopy $(OutputDirectory)\$(OutputFileName)$(OutputFileExtension) $(MSBuil
     <OutputPath>bin\Denormals\</OutputPath>
     <OutputFileName>libMathM0den</OutputFileName>
     <OutputFileExtension>.a</OutputFileExtension>
-    <PostBuildEvent>echo F|xcopy $(OutputDirectory)\$(OutputFileName)$(OutputFileExtension) $(MSBuildProjectDirectory)\lib-out\$(OutputFileName)$(OutputFileExtension) /Y /Q</PostBuildEvent>
+    <PostBuildEvent>cmd /c del $(MSBuildProjectDirectory)\TestDriver\$(Configuration)\TestDriver.elf
+echo F|xcopy $(OutputDirectory)\$(OutputFileName)$(OutputFileExtension) $(MSBuildProjectDirectory)\lib-out\$(OutputFileName)$(OutputFileExtension) /Y /Q</PostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="src\" />

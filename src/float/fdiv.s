@@ -134,6 +134,9 @@ DenNormalized:
 	lsrs	r3, #16		// q0 p15
 	lsrs	r5, r1, #8	// den p23
 	muls	r5, r3		// den*q0 p38
+.ifndef NO_DENORMALS
+	movs	r6, r0		// save num p31 for denormal case
+.endif
 	lsls	r0, #7		// num p38
 	subs	r5, r0, r5	// num - den*q0 = rem p38
 	asrs	r5, #10		// rem p28
@@ -171,6 +174,7 @@ DenNormalized:
 	// r2 = exponent - 1
 	// r3 = quo p30
 	// r4 = x p16
+	// r6 = num p31 if denormal build
 	lsls	r5, r3, #2	// Normalized?
 	bcs	Normalized
 	cmp	r2, #EXP_SPECIAL32 - 1
@@ -296,62 +300,58 @@ RetInfinity:
 .else	// NO_DENORMALS
 
 BigExp:
-	// r0 = num p38
 	// r1 = den p31
 	// r2 = exponent
 	// r3 = quo p30
 	// r4 = x p16
+	// r6 = num p31
 	blt	DenormRound
 	b	RetInfinity
 
 BigExpNorm:
-	// r0 = num p38
 	// r1 = den p31
 	// r2 = exponent
 	// r3 = quo p29
 	// r4 = x p16
+	// r6 = num p31
 	bge	RetInfinity
 	lsls	r3, #1		// quo p30
-	lsls	r0, #1		// num p39
+	lsls	r6, #1		// num p32
 DenormRound:
-	// If we're losing lots of bits, we'll just round with the ones
-	// we have using the shared denormalizer. Otherwise, we calculate
-	// the remainder, which requires adjustments to the binary point
-	// of the num and/or den to retain precision.
-	negs	r6, r2
-	cmp	r6, #17
-	bgt	DenormalHelp
 	// Set up to compute remainder for rounding
-	// r0 = num p38
 	// r1 = den p31
 	// r2 = exponent
 	// r3 = quo p30
 	// r4 = x p16
-	// r6 = -exponent, <= 17
-	lsrs	r3, r6
+	// r6 = num p31
+	negs	r0, r2
+	lsrs	r3, r0
 	adds	r3, #0x20	// add to guard bit
 	lsrs	r5, r3, #7	// shift off rounding bit
 	bcc	DenormNoRound
+	// Calculate the remainder, which requires adjustments to 
+	// the binary point of the num and/or den to retain precision.
 	lsrs	r3, #6		// clear off below rounding bit
-	// In the mainline remainder calculation, we shift num 9 bits
+	// In the mainline remainder calculation, we shift num 
 	// left to p47. Here we reduce that by the amount of 
 	// denormalization, but not below zero.
-	adds	r2, #9
+	adds	r2, #16
 	bmi	AdjDen
-	lsls	r0, r2		// adjust num binary point
+	lsls	r6, r2		// adjust num binary point
 	lsrs	r1, #8		// den p23
 	b	CalcRem
 AdjDen:
-	// So we're leaving num at p38. In the mainline calc, we
+	// So we're leaving num at p31. In the mainline calc, we
 	// shift den right 8 bits to p23 (keeping all significant
 	// bits). But we've shifted so much off the quotient we
-	// need to reduce that to leave quo * den at p38.
+	// need to reduce that to leave quo * den at p48.
 	adds	r2, #8
+	bmi	DenormNoRound	// underflow, leave as zero
 	lsrs	r1, r2		// adjust den binary point
 CalcRem:
 	muls	r1, r3		// den*quo
 	movs	r2, #0		// exponent will be zero
-	subs	r0, r1		// remainder
+	subs	r6, r1		// remainder
 	bmi	AddExp
 	bne	RoundUp
 	// Remainder was zero, round even
@@ -363,12 +363,6 @@ DenormNoRound:
 	movs	r0, r5
 	b	SetSign
 	
-DenormalHelp:
-	lsls	r0, r3, #1	// quo p31
-	movs	r3, #0		// no sticky bits
-	bl	__fdenormal_result
-	b	SetSign
-
 DenZeroExp:
 	// r0 = num, not zero
 	// r1 = den, sign cleared
