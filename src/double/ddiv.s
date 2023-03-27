@@ -161,7 +161,7 @@ SavedSign:
 	b	SetSign
 
 
-ENTRY_POINT	__ddiv, __aeabi_ddiv1
+ENTRY_POINT	__ddiv, __aeabi_ddiv
 	push	{r0, r2, r4-r7, lr}
 	// compute final sign
 	movs	r6, #1
