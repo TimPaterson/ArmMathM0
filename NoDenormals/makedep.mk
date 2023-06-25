@@ -22,6 +22,8 @@ src\double\dsub.s
 
 src\double\sqrt.s
 
+src\float\cosf.s
+
 src\float\faddsub.s
 
 src\float\fdenormal_result.s
@@ -32,5 +34,11 @@ src\float\fmul.s
 
 src\float\frsub.s
 
+src\float\sincosf.s
+
+src\float\sinf.s
+
 src\float\sqrtf.s
+
+src\float\tanf.s
 

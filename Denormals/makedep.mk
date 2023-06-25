@@ -32,5 +32,7 @@ src\float\fmul.s
 
 src\float\frsub.s
 
+src\float\sinf.s
+
 src\float\sqrtf.s
 

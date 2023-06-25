@@ -12,8 +12,8 @@
 #include <stdbool.h>
 
 // Select whether to time tests
-#define TIME_TEST	true
-//#define TIME_TEST	false
+//#define TIME_TEST	true
+#define TIME_TEST	false
 
 // Test Qfplib
 //#define TEST_QFPLIB	true

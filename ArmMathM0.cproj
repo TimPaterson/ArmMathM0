@@ -176,6 +176,9 @@ echo F|xcopy $(OutputDirectory)\$(OutputFileName)$(OutputFileExtension) $(MSBuil
     <Compile Include="src\double\sqrt.s">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\float\cosf.s">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\float\faddsub.s">
       <SubType>compile</SubType>
     </Compile>
@@ -191,7 +194,16 @@ echo F|xcopy $(OutputDirectory)\$(OutputFileName)$(OutputFileExtension) $(MSBuil
     <Compile Include="src\float\frsub.s">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\float\sincosf.s">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\float\sinf.s">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\float\sqrtf.s">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\float\tanf.s">
       <SubType>compile</SubType>
     </Compile>
   </ItemGroup>

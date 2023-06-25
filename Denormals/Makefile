@@ -60,6 +60,7 @@ PREPROCESSING_SRCS +=  \
 ../src/float/fdiv.s \
 ../src/float/fmul.s \
 ../src/float/frsub.s \
+../src/float/sinf.s \
 ../src/float/sqrtf.s
 
 
@@ -82,6 +83,7 @@ src/float/fdenormal_result.o \
 src/float/fdiv.o \
 src/float/fmul.o \
 src/float/frsub.o \
+src/float/sinf.o \
 src/float/sqrtf.o
 
 OBJS_AS_ARGS +=  \
@@ -100,6 +102,7 @@ src/float/fdenormal_result.o \
 src/float/fdiv.o \
 src/float/fmul.o \
 src/float/frsub.o \
+src/float/sinf.o \
 src/float/sqrtf.o
 
 C_DEPS +=  \
@@ -118,6 +121,7 @@ src/float/fdenormal_result.d \
 src/float/fdiv.d \
 src/float/fmul.d \
 src/float/frsub.d \
+src/float/sinf.d \
 src/float/sqrtf.d
 
 C_DEPS_AS_ARGS +=  \
@@ -136,6 +140,7 @@ src/float/fdenormal_result.d \
 src/float/fdiv.d \
 src/float/fmul.d \
 src/float/frsub.d \
+src/float/sinf.d \
 src/float/sqrtf.d
 
 OUTPUT_FILE_PATH +=libMathM0den.a
@@ -259,6 +264,13 @@ src/float/fmul.o: ../src/float/fmul.s
 	
 
 src/float/frsub.o: ../src/float/frsub.s
+	@echo Building file: $<
+	@echo Invoking: ARM/GNU Assembler : 6.3.1
+	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\arm\arm-gnu-toolchain\bin\arm-none-eabi-as.exe$(QUOTE) -mcpu=cortex-m0plus -mthumb -I "../src/include" -I "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\arm\CMSIS\5.4.0\CMSIS\Core\Include" -I "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\SAMC21_DFP\1.2.176\samc21\include"  -g   -o "$@" "$<" 
+	@echo Finished building: $<
+	
+
+src/float/sinf.o: ../src/float/sinf.s
 	@echo Building file: $<
 	@echo Invoking: ARM/GNU Assembler : 6.3.1
 	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\arm\arm-gnu-toolchain\bin\arm-none-eabi-as.exe$(QUOTE) -mcpu=cortex-m0plus -mthumb -I "../src/include" -I "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\arm\CMSIS\5.4.0\CMSIS\Core\Include" -I "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\SAMC21_DFP\1.2.176\samc21\include"  -g   -o "$@" "$<" 

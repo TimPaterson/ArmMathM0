@@ -116,19 +116,39 @@
 // Doesn't compute lowest product, so can be off by almost 1 bit
 // product p can be same as x
 
+// unsigned operands
 .macro	mul32x32hi	x, y, p, t1, t2, t3
-	lsrs	\t1, \y, #16	// yH
+	mul32x32hiSigns	\x, \y, \p, \t1, \t2, \t3, lsrs, lsrs
+.endm
+
+// left operand signed, right unsigned
+.macro	mul32sx32hi	x, y, p, t1, t2, t3
+	mul32x32hiSigns	\x, \y, \p, \t1, \t2, \t3, asrs, lsrs
+.endm
+
+// left operand unsigned, right signed
+.macro	mul32x32shi	x, y, p, t1, t2, t3
+	mul32x32hiSigns	\x, \y, \p, \t1, \t2, \t3, lsrs, asrs
+.endm
+
+// both operands signed
+.macro	mul32sx32shi	x, y, p, t1, t2, t3
+	mul32x32hiSigns	\x, \y, \p, \t1, \t2, \t3, asrs, asrs
+.endm
+
+.macro	mul32x32hiSigns	x, y, p, t1, t2, t3, shrx, shry
+	\shry	\t1, \y, #16	// yH
 	uxth	\t2, \x		// xL
 	muls	\t2, \t1	// yH * xL = mid 1
-	lsrs	\p, \x, #16	// xH
+	\shrx	\p, \x, #16	// xH
 	muls	\t1, \p		// yH * xH = hi
-	lsrs	\t3, \t2, #16	// hi half of mid 1
+	\shry	\t3, \t2, #16	// hi half of mid 1
 	adds	\t1, \t3
 	uxth	\t3, \y		// yL
 	muls	\t3, \p		// yL * xH = mid 2
 	uxth	\t2, \t2	// lo half of mid1
 	adds	\t3, \t2	// sum mids
-	lsrs	\t3, #16
+	\shrx	\t3, #16
 	adds	\p, \t1, \t3
 .endm
 
@@ -160,6 +180,7 @@
 	lsrs	\hi, #\cnt
 .endm
 
+// For shift count in register, <= 32
 .macro	lsl64short	lo, hi, cnt, tmp
 	lsls	\hi, \cnt
 	movs	\tmp, \lo
@@ -180,6 +201,7 @@
 	orrs	\lo, \tmp
 .endm
 
+// For shift count in register, <= 64
 .macro lsr64	lo, hi, cnt, tmp1, tmp2
 	// inspired by __aeabi_llsr
 	movs	\tmp1, \hi	// hi1
