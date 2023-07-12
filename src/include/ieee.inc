@@ -15,7 +15,16 @@
 .set	EXP_SPECIAL32,	((1 << EXP_BITS32) - 1)
 .set	SIGN_BIT32,	(1LL << 31)
 
+.macro	SET_FLOAT	name, sign, exp, mant
+.set	\name, ((\sign) << 31) | (((\exp) + EXP_BIAS32) << MANT_BITS32) | ((\mant) & ((1 << MANT_BITS32) - 1))
+.endm
+
+.macro	LOAD_FLOAT	reg, sign, exp, mant
+	MOV_IMM		\reg, ((\sign) << 31) | (((\exp) + EXP_BIAS32) << MANT_BITS32) | ((\mant) & ((1 << MANT_BITS32) - 1))
+.endm
+
 // Special values
+.set	ONE32,		EXP_BIAS32 << MANT_BITS32
 .set	INFINITY32,	EXP_SPECIAL32 << MANT_BITS32
 // Quiet NAN has MSB of mantissa set
 .set	NAN32,		INFINITY32 | (1 << (MANT_BITS32 - 1))

@@ -26,8 +26,11 @@
 // The calculation will use iteration to refine an approximations of the 
 // reciprocal of the denominator (saw it on Wikipedia).
 // The initial guess will be calculated by subtracting the upper mantissa
-// bits from the constant 2.92, or 0xBB. The value was determined using a
-// spreadsheet. It gives a result accurate to almost 4 bits.
+// bits from the constant 2.92, or 0xBB. See fdiv.s for a full discussion
+// of how this constant was derived. It gives a result accurate to about 3.7 bits.
+//
+// The "p" notation used throughout is the position of the binary point 
+// (p16 means there are 16 bits to the right).
 
 .set	GuessBase, 0xBB
 
@@ -220,8 +223,7 @@ DenNormalized:
 	// lr = result exponent
 	//
 	// Compute guess for 1/den = (K - den)/2. K is nearly 3.
-	// den in [1, 2). The "p" notation is the position of the
-	// binary point (p16 means there are 16 bits to the right).
+	// den in [1, 2).
 	lsrs	r4, r3, #15	// den p16
 	movs	r5, #GuessBase
 	lsls	r5, #25 - 15	// MSB one bit left of den

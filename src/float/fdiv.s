@@ -24,9 +24,47 @@
 //	r0 = num / den
 //
 // The calculation will use Newton-Raphson iteration on reciprocal.
+//
+// The "p" notation used throughout is the position of the binary point 
+// (p16 means there are 16 bits to the right).
+//
 // The initial guess will be calculated by subtracting the upper mantissa 
-// bits from the constant 2.92, or 0xBB. The value was determined using a 
-// spreadsheet. It gives a result accurate to almost 4 bits.
+// bits from the constant 2.92, or 0xBB. The value was determined as follows:
+//
+// Define d as denominator and x as the guess for 1/d. We want to find K
+// so that x = (K-d)/2 has minimal error over d in [1, 2), error defined as 
+//
+// e = |1 - d*x| = |1 - d*(K-d)/2| = |1 - K*d/2 + d^2/2|.
+//
+// A max is found by setting the derivative to zero:
+//
+// e' = -K/2 + d = 0, thus d = K/2 at max error. The error at this point is:
+// e(max) = e(K/2) = 1 - K^2/4 + K^2/8 = 1 - K^2/8
+//
+// The endpoints can also provide a max error:
+//
+// e(1) = 1 - K/2 + 1/2 = 1.5 - K/2 = (3 - K)/2
+// e(2) = 1 - K   + 4/2 = 3 - K
+//
+// We'll use e(2) since e(1) has half the error. So we find where the two
+// errors are equal and opposite, e(max) = -e(2):
+//
+// 1 - K^2/8 = K - 3  =>  K^2/8 + K - 4 = 0
+//
+// One of whose solutions is 2.9282, which is 0x2ED9F p16.
+//
+// The max error with this constant is:
+//
+// e = 3 - K = 0.0718; or an accuracy of -log2(e) = 3.80 bits.
+//
+// Using only 8 bits to produce the constant K gives 0xBB p6. Converted 
+// back to decimal that is 2.91875, which increases max error to 0.0781, 
+// or an accuracy of 3.68 bits.
+//
+// Note that the guess could be improved by restricting it to >= 0.5 
+// and calculating a different corresponding K. However, there is
+// sufficient accuracy without the added steps.
+
 
 .set	GuessBase, 0xBB
 

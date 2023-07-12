@@ -4,7 +4,7 @@
  *
  * Created: 11/15/2021 11:48:59 AM
  *  Author: Tim
- */ 
+ */
 
 .syntax unified
 .cpu cortex-m0plus
@@ -51,7 +51,7 @@
 //
 // The guess will have more than 4 bits of accuracy, allowing 4 iterations to
 // get to the required accuracy. The notation p7 means there are 7 bits to the
-// right of the binary point, and this notation is used throuout the comments.
+// right of the binary point, and this notation is used throughout the comments.
 //
 // Mark Owen demonstrates in Qfplib (http://www.quinapalus.com) some clever
 // arrangements that simplify the code for an iteration. First, the common
@@ -248,7 +248,7 @@ Normalized:
 	// 11 - maybe round up
 	// 00 - already rounded up
 	//
-	// So if the round bit ends up 1, we need to calculate the final 
+	// So if the round bit ends up 1, we need to calculate the final
 	// remainder for rounding.
 
 	adds	r2, #1		// add to guard bit at p54

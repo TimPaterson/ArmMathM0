@@ -25,9 +25,9 @@
 // This simply calls __sinf, which return sinf() in r0 and cosf() in r1.
 // Tangent is computed by dividing them: tan(x) = sin(x)/cos(x).
 
-FUNC_START	__tanf, tanf
+FUNC_START	__tanfM0, tanf
 	push	{lr}
-	bl	__sinf
+	bl	__sinfM0
 	bl	__fdiv
 	pop	{pc}
 

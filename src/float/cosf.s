@@ -24,9 +24,9 @@
 //
 // This simply calls __sinf, which return sinf() in r0 and cosf() in r1.
 
-FUNC_START	__cosf, cosf
+FUNC_START	__cosfM0, cosf
 	push	{lr}
-	bl	__sinf
+	bl	__sinfM0
 	movs	r0, r1
 	pop	{pc}
 

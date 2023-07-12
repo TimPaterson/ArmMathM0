@@ -166,16 +166,16 @@
 	adds	\lo, \lo
 	adcs	\hi, \hi
 .else
-	lsls	\hi, #\cnt
-	lsrs	\tmp, \lo, #(32 - \cnt)
-	orrs	\hi, \tmp
+	lsrs	\tmp, \lo, #32 - (\cnt)
 	lsls	\lo, #\cnt
+	lsls	\hi, #\cnt
+	orrs	\hi, \tmp
 .endif
 .endm
 
 .macro	lsr64const	lo, hi, cnt, tmp
 	lsrs	\lo, #\cnt
-	lsls	\tmp, \hi, #(32 - \cnt)
+	lsls	\tmp, \hi, #32 - (\cnt)
 	orrs	\lo, \tmp
 	lsrs	\hi, #\cnt
 .endm
@@ -236,6 +236,23 @@
 .endm
 
 //*********************************************************************
+// 96-bit shifts
+//*********************************************************************
+
+// For shift count in register, <= 32
+.macro	lsl96short	lo, mid, hi, cnt, tmp
+	lsls	\hi, \cnt
+	movs	\tmp, \mid
+	lsls	\mid, \cnt
+	subs	\cnt, #32
+	negs	\cnt, \cnt
+	lsrs	\tmp, \cnt
+	orrs	\hi, \tmp
+	lsrs	\lo, \cnt
+	orrs	\mid, \lo
+.endm
+
+//*********************************************************************
 // Count leading zeros, you choose the registers to use
 //*********************************************************************
 
@@ -269,4 +286,43 @@
 4:
 	lsrs	\arg, #1
 	subs	\arg, \cnt, \arg
+.endm
+
+//*********************************************************************
+// Swap registers
+//*********************************************************************
+
+.macro	SWAP	arg1, arg2
+	eors	\arg1, \arg2
+	eors	\arg2, \arg1
+	eors	\arg1, \arg2
+.endm
+
+//*********************************************************************
+// Optimize loading immediate value into register
+//*********************************************************************
+
+.macro	MOV_IMM	reg, int, shift=0
+.if	(\int) & 0xFFFFFF00 == 0
+	movs	\reg, #\int
+	.if	(\shift) != 0
+		lsls	\reg, #\shift
+	.endif
+.elseif (\int) & 1 == 0
+	MOV_IMM	\reg, (\int) >> 1, (\shift) + 1
+.else
+	ldr	\reg, =#(\int) << (\shift)
+.endif
+.endm
+
+//*********************************************************************
+// Shift constants (assembler doesn't support 64-bit numbers)
+//*********************************************************************
+
+.macro	LSL	name, lo, hi, cnt
+.set	\name, ((\hi) << (\cnt)) | ((\lo) >> (32 - (\cnt)))
+.endm
+
+.macro	LSR	name, lo, hi, cnt
+.set	\name, ((\lo) >> (\cnt)) | ((\hi) << (32 - (\cnt)))
 .endm

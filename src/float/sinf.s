@@ -13,6 +13,7 @@
 .include "macros.inc"
 .include "ieee.inc"
 .include "options.inc"
+.include "trigf.inc"
 
 
 // 32-bit floating-point sine
@@ -29,30 +30,44 @@
 // this, there is a separate calculation for small angles.
 //
 // If the angle is very small, we can just return sin(x) = x and cos(x) = 1.
-// The series for cos(x) starts with 
+// The series for cos(x) starts with
 //	cos(x) = 1 - x^2/2 + ...
 // So we return cos(x) = 1 (and sin(x) = x) if x^2/2 < 2^-25, or x < 2^-12.
 //
-// The "p" notation used throughout is the position of the binary point 
+// The "p" notation used throughout is the position of the binary point
 // (p16 means there are 16 bits to the right).
 
-.set	COS_X_EQUALS_1_EXP,	-12
-.set	ONE,			EXP_BIAS32 << MANT_BITS32
-.set	PI_MANTISSA,		0XC90FDAA2	// p30 for pi, p32 for pi/4
-.set	ONE_OVER_PI_MANTISSA,	0xA2F9836E	// p33 for 1/pi, p31 for 4/pi
-.set	ATAN_OF_HALF,		0x76B19C16	// p32
-.set	ATAN_OF_2_TO_MINUS_8,	0x3FFFEAAB	// p38
 
-.set	SMALL_ANGLE_SHIFT,	7
+.set	FINE_REDUCTION_MAX_BITS, 8
+.set	FINE_REDUCTION_MAX,	(1 << FINE_REDUCTION_MAX_BITS) - 1	// max multiples of pi/4 for lossless reduction
+.set	PI_HI,			PI_MANTISSA >> FINE_REDUCTION_MAX_BITS
+LSR	PI_MID32,		PI_MANTISSA_LO, PI_MANTISSA, 2 * FINE_REDUCTION_MAX_BITS// shift into position
+.set	PI_MID,			PI_MID32 & ((1 << (32 - FINE_REDUCTION_MAX_BITS)) - 1)
+.set	PI_LO,			(PI_MANTISSA_LO >> FINE_REDUCTION_MAX_BITS) & ((1 << FINE_REDUCTION_MAX_BITS) - 1)
+.set	SMALL_ANGLE_SHIFT,	7	// shift in y for small angles
+.set	SHIFT_START,		2	// first rotation is atan(2^-2)
+.set	SHIFT_END,		SINE_ATAN_TABLE_ENTRIES - 1 + SHIFT_START - 1
+.set	SMALL_SHIFT_START,	2
+.set	SMALL_SHIFT_END,	SMALL_SINE_ATAN_TABLE_ENTRIES - 1 + SMALL_SHIFT_START - 1
+.set	SCALE,			0xDBD95B20	// product of cosines, p32
+.set	SMALL_SCALE,		0xFFFF5560	// product of cosines in small table, p38
+.ifdef WIDE_TRIG_RANGE
+.set	MAX_VALID_EXP,		14	// less than 2^15 radians allowed
+.else
+.set	MAX_VALID_EXP,		7	// less than 2^8 radians allowed
+.endif
 
 
-	.func	__sinf
+	.func	__sinfM0
 
 SpecialExp:
 	// If argument is NAN, return it for both sin() and cos().
 	// If it's infinity, make a new NAN and return it for both.
 	lsls	r2, r0, #(EXP_BITS32 + 1)	// mantissa == 0?
 	bne	ReturnOp	// input is NAN, return it
+.ifndef WIDE_TRIG_RANGE
+BigReduction:
+.endif
 ReturnNan:
 	ldr	r0, =#NAN32
 ReturnOp:
@@ -60,7 +75,73 @@ ReturnOp:
 	pop	{r4-r7, pc}
 
 
-ENTRY_POINT	__sinf, sinf
+.ifdef WIDE_TRIG_RANGE
+
+BigReduction:
+	// r1 = unbiased exponent + 1, >= 0, <= 15
+	// r2 = input mantissa, MSB set
+	// r3 = floor(input/(pi/4)) p0
+	// r4 = input >> 16
+	// r5 = 31 - r1
+	// r6 = 4/pi * input p31
+	// r7 = input sign
+	//
+	// Reduction is > FINE_REDUCTION_MAX * pi/4. Calculate it
+	// more exactly with 32x24 multiply of input*(4/pi).
+	ldr	r3, =#ONE_OVER_PI_MANTISSA
+	uxth	r0, r3
+	muls	r0, r4		// 4/pi lo16 * input hi16
+	lsrs	r4, r2, #8
+	uxtb	r4, r4
+	lsrs	r3, #8
+	muls	r3, r4		// 4/pi hi24 * input lo8
+	// sum partial products
+	adds	r3, r0
+	bcc	SumIt
+	MOV_IMM	r4, 0x10000
+	adds	r6, r4
+SumIt:
+	lsrs	r3, #16
+	adds	r3, r6		// complete input * 4/pi = input/(pi/4)
+	lsrs	r3, r5		// floor(input/(pi/4)) p0
+
+	// now create that exact multiple of pi/4
+	// use a 16x64 multiply to get exact result
+	mov	r12, r7
+	ldr	r0, =#PI_MANTISSA_LO
+	uxth	r4, r0			// low half pi lo
+	muls	r4, r3
+	lsls	r6, r4, #16		// extended result
+	lsrs	r4, #16			// in position
+	lsrs	r0, #16			// high half pi lo
+	muls	r0, r3
+	adds	r4, r0			// sum bottom two partial products
+	ldr	r0, =#PI_MANTISSA
+	uxth	r7, r0			// low half pi hi
+	muls	r7, r3
+	lsrs	r0, #16			// high half of pi hi
+	muls	r0, r3
+	lsrs	r5, r7, #16		// align for sum
+	lsls	r7, #16
+	adds	r4, r7
+	adcs	r0, r5
+	// r0:r4:r6 = multiple of pi/4
+	// set up normalization shift count
+	movs	r5, #16
+	subs	r5, r1
+	lsl96short	r6, r4, r0, r5, r7	// 64-bit left shift to normalize
+	mov	r7, r12
+	// r0:r4 = multiple of pi/4, p32
+	// r1 = unbiased exponent + 1, >= 0
+	// r2 = input mantissa, MSB set
+	// r3 = quotient
+	// r7 = input sign, 0 or -1
+	b	HaveReductionProduct
+
+.endif	// WIDE_TRIG_RANGE
+
+
+ENTRY_POINT	__sinfM0, sinf
 	push	{r4-r7, lr}
 	lsls	r1, r0, #1		// clear input sign
 	lsrs	r1, #MANT_BITS32 + 1	// isolate exponent
@@ -71,55 +152,78 @@ ENTRY_POINT	__sinf, sinf
 	lsls	r2, #MANT_BITS32	// implied bit position
 	orrs	r2, r0
 	lsls	r2, #EXP_BITS32		// isolate mantissa
-	subs	r1, EXP_BIAS32 - 1
-	blt	FullyReduced
+	movs	r4, #0			// extend mantissa
+	subs	r1, EXP_BIAS32 - 1	// r1 = unbiased exp. + 1
+	blt	FullyReduced		// already < 0.5 radians?
+	cmp	r1, #MAX_VALID_EXP + 1
+	bgt	ReturnNan		// if immense, return NAN to say we can't do it
 
-	// r1 = unbiased exponent + 1, >= 0
+	// r1 = unbiased exponent + 1, >= 0, <= 15
 	// r2 = input mantissa, MSB set
 	// r7 = input sign
 	//
 	// Calculate the number of multiples of pi/4
-	ldr	r3, =#ONE_OVER_PI_MANTISSA >> 16	// p15
-	lsrs	r4, r2, #16	// input p16 for exponent + 1 == 0
-	muls	r3, r4		// p31 for exponent + 1 == 0
-	movs	r4, #31
-	subs	r4, r1		// no. of bits < 1
-	blt	ReturnNan	// if immense, return NAN to say we can't do it
-	lsrs	r3, r4		// floor(input/(pi/4)) p0
-	beq	VerifyOctant	// speed up angles <= pi/4
-	ldr	r0, =#PI_MANTISSA	// MSB set, p32 for pi/4
-	mov	r12, r7
-	mul32x32	r3, r0, r4, r0, r5, r6, r7
-	mov	r7, r12
-	// r0:r4 = multiple of pi/4, p31
+	ldr	r3, =#ONE_OVER_PI_MANTISSA >> 16	// 4/pi p15
+	lsrs	r4, r2, #16	// input p16
+	muls	r3, r4		// p31
+	movs	r5, #31
+	subs	r5, r1
+.ifdef WIDE_TRIG_RANGE
+	movs	r6, r3
+.endif
+	lsrs	r3, r5		// floor(input/(pi/4)) p0
+	cmp	r3, #FINE_REDUCTION_MAX
+	bhi	BigReduction
+	ldr	r0, =#PI_HI
+	muls	r0, r3
+	ldr	r4, =#PI_MID
+	muls	r4, r3		// partial products overlap by FINE_REDUCTION_MAX_BITS
+	lsrs	r6, r4, #32 - FINE_REDUCTION_MAX_BITS
+	adds	r0, r6
+	lsls	r4, #FINE_REDUCTION_MAX_BITS
+	ldr	r6, =#PI_LO
+	muls	r6, r3
+	adds	r4, r6		// r0:r4 = pi/4 reduction
+	bcc	1f
+	adds	r0, #1		// propagate carry
+1:
+	// r0:r4 = multiple of pi/4
 	// r1 = unbiased exponent + 1, >= 0
 	// r2 = input mantissa, MSB set
 	// r3 = quotient
-	// r7 = input sign
-	movs	r5, #32
-	subs	r5, r1		// no. of leading zeros
-	// 64-bit left shift to normalize
-	lsls	r0, r5
-	movs	r6, r4
-	lsls	r4, r5
-	lsrs	r6, r1
-	orrs	r0, r6
+	// r5 = 31 - r1
+	// r7 = input sign, 0 or -1
+	subs	r5, #31 - FINE_REDUCTION_MAX_BITS	// = FINE_REDUCTION_MAX_BITS - r1
+	lsl64short	r4, r0, r5, r6		// 64-bit left shift to normalize
+HaveReductionProduct:
 	// remove pi/4 multiples, exactly
 	negs	r4, r4
-	sbcs	r2, r0		
+	sbcs	r2, r0
+	// r1 = unbiased exponent + 1, >= 0
+	// r2:r4 = input mod pi/4
+	// r3 = quotient (octant)
+	// r7 = input sign, 0 or -1
 	lsl64short	r4, r2, r1, r6
-VerifyOctant:
-	// Our calculation of the number of pi/4 mulitples could be short.
 	ldr	r0, =#PI_MANTISSA	// MSB set, p32 for pi/4
+	ldr	r5, =#PI_MANTISSA_LO
+	// Our calculation of the number of pi/4 mulitples could be short 1.
+	//
+	// r0 - pi/4 mantissa p32
+	// r2:r4 = reduced input p32
+	// r3 = tentative octant (zero-based)
+	// r7 = input sign,  0 or -1
 	cmp	r2, r0
 	blo	CheckOctant
 	adds	r3, #1
-	subs	r2, r0
+	subs	r4, r5
+	sbcs	r2, r0
 CheckOctant:
 	// if odd-numbered octant, subtract from pi/4
-	lsrs	r5, r3, #1
+	lsrs	r6, r3, #1
 	bcc	SaveOctant
-	subs	r2, r0, r2
+	subs	r4, r5, r4
+	sbcs	r0, r2
+	movs	r2, r0
 SaveOctant:
 	eors	r7, r3		// invert octant if negative
 	movs	r1, #0		// exponent + 1 for reduced angle
@@ -127,14 +231,25 @@ FullyReduced:
 	// Range reduction could have introduced any number of leading
 	// zeros. See if there are enough to divert to the small angle
 	// loop.
+	//
+	// r1 = unbiased exponent + 1, <= 0
+	// r2:r4 = input mantissa
+	// r7 = octant info
 	mov	r12, r7		// save octant info
-	lsrs	r3, r2, #32 - SMALL_ANGLE_SHIFT
+	ldr	r3, =#__sineAtanTable
+	lsrs	r5, r2, #32 - SMALL_ANGLE_SHIFT
 	beq	SmallAngleUnnormal
 	// input domain [0, pi/4]
 	// r1 = unbiased exponent + 1
-	// r2 = mantissa 
+	// r2 = mantissa
 	// r12 = octant info
-	adds	r3, r1, #SMALL_ANGLE_SHIFT - 1
+	//
+	// round the reduced angle in r2:r4
+	lsls	r4, #1
+	bcc	1f
+	adds	r2, #1
+1:
+	adds	r4, r1, #SMALL_ANGLE_SHIFT - 1
 	blt	SmallAngle
 	negs	r1, r1
 	lsrs	r2, r1		// mantissa p32
@@ -146,13 +261,10 @@ FullyReduced:
 	// So the first rotation from the table is tan() == 0.25, a
 	// shift of 2 bits.
 
-.set	SHIFT_START,	2
-
 	ldr	r1, =#SCALE
 	lsrs	r0, r1, #1
-	adr	r3, AtanTable
 	movs	r4, #SHIFT_START - 1	// we increment first thing
-	ldr	r5, =#ATAN_OF_HALF	// Simulate tan() = 0.5 rotation
+	ldmia	r3!, {r5}		// tan() = 0.5 rotation
 	subs	r2, r5
 	movs	r5, #0
 	// r0 = y p32 (becomes sin)
@@ -161,6 +273,7 @@ FullyReduced:
 	// r3 = ptr to table of angles [atan(2^-i)]
 	// r4 = iteration i (and shift count)
 	// r5 = extended y p64
+	// r12 = octant info
 RotLoop:
 	adds	r4, #1
 	movs	r6, #32
@@ -190,7 +303,6 @@ TooSmall:
 	adds	r1, r7		// x += y * 2^-i
 	ldmia	r3!, {r6}	// next atan()
 	adds	r2, r6		// new angle
-LoopTail:
 	cmp	r4, #SHIFT_END
 	bne	RotLoop
 LoopDone:
@@ -198,6 +310,7 @@ LoopDone:
 	// r1 = x p32 (becomes cos)
 	// r2 = z p32 (current error in angle)
 	// r5 = extended y p64
+	// r12 = octant info
 	//
 	// We have used CORDIC to get us x (cos) and y (sin) of an angle
 	// very close to our target. The remaining error angle z is so
@@ -230,13 +343,14 @@ LoopDone:
 	muls	r7, r6		// p42
 
 	movs	r2, #EXP_BIAS32	// exponent
-	// Normalize the y signed result. Minimum value 2^-6.
+	// Normalize the y result. Minimum value 2^-6.
 Normalize:
 	// r0 = y
 	// r1 = x p32 uncorrected
 	// r2 = exponent of y
 	// r5 = extended y p63
 	// r7 = correction for x p42
+	// r12 = octant info
 	asrs	r7, #10		// p32
 	subs	r1, r7
 NormLoop:
@@ -248,28 +362,24 @@ NormLoop:
 	// r0 = y
 	// r1 = x, sqrt(2) <= x < 1, p32
 	// r2 = exponent of y
+	// r12 = octant info
 	movs	r4, #0
 	lsrs	r1, #EXP_BITS32	// position mantissa
 	adcs	r1, r4		// add rounding bit
 	movs	r4, #EXP_BIAS32 - 2	// implied bit will add 1
 	lsls	r4, #MANT_BITS32	// position exponent
 	adds	r1, r4		// combine exponent
-
 CombineSine:
 	// r0 = y, fully left justified w/o implied bit
 	// r1 = fully completed cosine
 	// r2 = exponent of y
 	// r12 = octant info
 	lsls	r2, #MANT_BITS32	// position exponent
-	movs	r4, #0
 	lsrs	r0, #EXP_BITS32 + 1	// position mantissa
-	adcs	r0, r4		// add rounding bit
-	adds	r0, r2		// combine exponent
+	adcs	r0, r2		// combine exponent and rounding bit
 
 	// Correct the result for original octant
-	// Octant info in r12:
-	// bit 0: original argument sign
-	// bits 1-3: octant number
+	// Bits 0-2: octant number
 	//  octant  |  swap | sin | cos
 	//     0    |    no |  +  |  +
 	//     1    |   yes |  +  |  +
@@ -293,9 +403,7 @@ CombineSine:
 	lsrs	r4, #2		// octant bit 1 to CY
 	bcc	SetSigns
 	// swap sin and cos
-	movs	r2, r0
-	movs	r0, r1
-	movs	r1, r2
+	SWAP	r0, r1
 SetSigns:
 	adds	r4, r3, 2	// add to octant bit 1
 	lsrs	r4, #2		// isolate octant bit 2
@@ -312,15 +420,16 @@ ZeroSine:
 
 QuickExitUnnormal:
 	// r1 = unbiased exponent + 1
-	// r2 = mantissa, at least -COS_X_EQUALS_1_EXP leading zeros
+	// r2:r4 = mantissa, at least -COS_X_EQUALS_1_EXP leading zeros
 	// r12 = octant info
 	subs	r1, #-COS_X_EQUALS_1_EXP
-	lsls	r2, #-COS_X_EQUALS_1_EXP	// get rid of some leading zeros
+	lsl64const	r4, r2, -COS_X_EQUALS_1_EXP, r6	// get rid of some leading zeros
 	beq	ZeroSine
 	bmi	QuickExit
 SmallNormLoop:
 	subs	r1, #1
-	lsls	r2, #1
+	adds	r4, r4
+	adcs	r2, r2
 	bpl	SmallNormLoop
 QuickExit:
 	// r1 = unbiased exponent + 1
@@ -329,7 +438,7 @@ QuickExit:
 	lsls	r0, r2, #1	// clear off implied bit
 	adds	r1, #EXP_BIAS32 - 1
 	movs	r2, r1
-	ldr	r1, =#ONE
+	MOV_IMM	r1, ONE32
 	// r0 = y, fully left justified w/o implied bit
 	// r1 = fully completed cosine
 	// r2 = exponent of y
@@ -337,41 +446,49 @@ QuickExit:
 	b	CombineSine
 
 SmallAngleUnnormal:
-	// We can 
-	// r1 = unbiased exponent + 1
-	// r2 = mantissa, at least SMALL_ANGLE_SHIFT leading zeros
+	// r2:r4 = mantissa, at least SMALL_ANGLE_SHIFT leading zeros
+	// r3 = __sineAtanTable pointer
 	// r12 = octant info
-	// 
+	//
 	// Check for more leading zeros for quick exit
-	lsrs	r4, r2, #32 + COS_X_EQUALS_1_EXP
+	lsrs	r5, r2, #32 + COS_X_EQUALS_1_EXP
 	beq	QuickExitUnnormal
-	lsls	r2, #SMALL_ANGLE_SHIFT - 1
+	lsl64const	r4, r2, SMALL_ANGLE_SHIFT - 1, r6
+	// round the reduced angle in r2:r4
+	lsls	r4, #1
+	bcc	SmallStartCordic
+	adds	r2, #1
+	b	SmallStartCordic
 
 SmallAngle:
-	// r1 = unbiased exponent + 1
 	// r2 = normalized mantissa (MSB set)
-	// r3 = unbiased exponent + SMALL_ANGLE_SHIFT, < 0
-	negs	r3, r3
-	cmp	r3, -COS_X_EQUALS_1_EXP - SMALL_ANGLE_SHIFT
+	// r3 = __sineAtanTable pointer
+	// r4 = unbiased exponent + SMALL_ANGLE_SHIFT, < 0
+	// r12 = octant info
+	negs	r4, r4
+	cmp	r4, #-COS_X_EQUALS_1_EXP - SMALL_ANGLE_SHIFT
 	bgt	QuickExit
-	lsrs	r2, r3		// mantissa p38
+	lsrs	r2, r4		// mantissa p38
 
+SmallStartCordic:
+	// r2 = normalized mantissa (MSB set)
+	// r3 = __sineAtanTable pointer
+	// r12 = octant info
+	//
 	// Like the main CORDIC loop, we can hard code the first rotation
 	// since the angle is always positive.
-
-.set	SMALL_SHIFT_START,	2
-
 	ldr	r1, =#SMALL_SCALE
 	lsrs	r0, r1, #1
-	adr	r3, SmallAtanTable
+	adds	r3, #SMALL_SINE_ATAN_TABLE_OFFSET
 	movs	r4, #SMALL_SHIFT_START - 1	// we increment first thing
-	ldr	r5, =#ATAN_OF_2_TO_MINUS_8	// Simulate tan() = 2^-8 rotation
+	ldmia	r3!, {r5}	// tan() = 2^-8 rotation
 	subs	r2, r5
 	// r0 = y p39 (becomes sin)
 	// r1 = x p32 (becomes cos)
 	// r2 = current error in angle p38
 	// r3 = ptr to table of angles [atan(2^-i)]
 	// r4 = iteration i (and shift count)
+	// r12 = octant info
 SmallRotLoop:
 	adds	r4, #1
 	ldmia	r3!, {r5}	// next atan()
@@ -398,6 +515,7 @@ SmallLoopDone:
 	// r0 = y p39 (becomes sin)
 	// r1 = x p32 (becomes cos)
 	// r2 = z p38 (current error in angle)
+	// r12 = octant info
 	// |z| <= last table entry, 26 bits incl. sign
 	// 0 < y < 1
 	// 0 < x < 1
@@ -419,85 +537,7 @@ SmallLoopDone:
 	// r2 = exponent of y
 	// r5 = extended y p63
 	// r7 = correction for x p42
+	// r12 = octant info
 	b	Normalize
-
-	.ltorg
-AtanTable:
-	.word	0x3EB6EBF2
-	.word	0x1FD5BA9B
-	.word	0xFFAADDC
-	.word	0x7FF556F
-	.word	0x3FFEAAB
-	.word	0x1FFFD55
-	.word	0xFFFFAB
-	.word	0x7FFFF5
-	.word	0x3FFFFF
-	.word	0x200000
-	.word	0x100000
-	.word	0x80000
-.set	SHIFT_END, (. - AtanTable) / 4 + SHIFT_START - 1
-
-// The scale factor is the product of the cosines of all the angles in
-// the table, so it depends on table length.
-// Scale for p32
-.if	SHIFT_END <= 10
-.error	"No scale factor for selected atan table size."
-.elseif	SHIFT_END == 11
-.set	SCALE, 0xDBD95BA9
-.elseif	SHIFT_END == 12
-.set	SCALE, 0xDBD95B3B
-.elseif	SHIFT_END == 13
-.set	SCALE, 0xDBD95B20
-.else
-.set	SCALE, 0xDBD95B19
-.endif
-/*
-// Scale for p31
-.if	SHIFT_END <= 10
-.error	"No scale factor for selected atan table size."
-.elseif	SHIFT_END == 11
-.set	SCALE, 0x6DECADD5
-.elseif	SHIFT_END == 12
-.set	SCALE, 0x6DECAD9E
-.elseif	SHIFT_END == 13
-.set	SCALE, 0x6DECAD90
-.else
-.set	SCALE, 0x6DECAD8C
-.endif
-*/
-
-SmallAtanTable:
-	.word	0x1FFFFD55
-	.word	0xFFFFFAB
-	.word	0x7FFFFF5
-	.word	0x3FFFFFF
-	.word	0x2000000
-	//.word	0x1000000
-.set	SMALL_SHIFT_END, (. - SmallAtanTable) / 4 + SMALL_SHIFT_START - 1
-
-// Scale for p32
-.if	SMALL_SHIFT_END < 4 || SMALL_SHIFT_END > 7
-.error	"No scale factor for small angle atan table size."
-.elseif	SMALL_SHIFT_END == 4
-.set	SMALL_SCALE, 0xFFFF5600
-.elseif	SMALL_SHIFT_END == 5
-.set	SMALL_SCALE, 0xFFFF5580
-.elseif	SMALL_SHIFT_END == 6
-.set	SMALL_SCALE, 0xFFFF5560
-.elseif	SMALL_SHIFT_END == 7
-.set	SMALL_SCALE, 0xFFFF5558
-.endif
-/*
-// Scale for p31
-.if	SMALL_SHIFT_END < 4 || SMALL_SHIFT_END > 6
-.error	"No scale factor for small angle atan table size."
-.elseif	SMALL_SHIFT_END == 4
-.set	SMALL_SCALE, 0x7FFFAB00
-.elseif	SMALL_SHIFT_END == 5
-.set	SMALL_SCALE, 0x7FFFAAC0
-.elseif	SMALL_SHIFT_END == 6
-.set	SMALL_SCALE, 0x7FFFAAB0
-.endif
-*/
 
 	.endfunc

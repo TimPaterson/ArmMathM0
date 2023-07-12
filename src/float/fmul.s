@@ -150,7 +150,7 @@ BigExp:
 	adds	r2, #1		// was exponent -1?
 	bne	ZeroResult
 	lsrs	r0, #1		// make room if rounds up
-	adds	r3, #0x80	// treat LSB at rounding bit
+	adds	r0, #0x80	// treat LSB at rounding bit
 	bmi	Align
 	b	ZeroResult
 .else

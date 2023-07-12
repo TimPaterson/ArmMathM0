@@ -25,7 +25,7 @@
 //	r4 = argument to count leading zeros, non-zero
 // Exit:
 //	r4 = count of leading zeros, 0 - 31
-//	r0, r1, r2, r3, r7 preserved
+//	r0, r1, r2, r3, r7, r12 preserved
 //	r5, r6 destroyed
 //*********************************************************************
 
