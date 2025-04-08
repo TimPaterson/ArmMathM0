@@ -140,7 +140,7 @@ echo F|xcopy $(OutputDirectory)\$(OutputFileName)$(OutputFileExtension) $(MSBuil
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <ToolchainSettings>
-      <ArmGcc xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+      <ArmGcc>
         <armgcc.common.outputfiles.hex>True</armgcc.common.outputfiles.hex>
         <armgcc.common.outputfiles.lss>True</armgcc.common.outputfiles.lss>
         <armgcc.common.outputfiles.eep>True</armgcc.common.outputfiles.eep>
@@ -222,6 +222,9 @@ echo F|xcopy $(OutputDirectory)\$(OutputFileName)$(OutputFileExtension) $(MSBuil
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\double\sqrt.s">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\float\asinf.s">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\float\atan2f.s">
