@@ -31,7 +31,7 @@ answer is at the midpoint between two adjacent representable values.
 This means when the exact result is between two adjacent representable values, 
 it might not choose the closest one. This accuracy is valid for inputs up to ±200 radians.
 `tanf()`, computed from sin/cos, has a max error of a little over 2 ULP in that range.
-`atanf()`, and `atan2f()` have an error less than 1 ULP over all inputs.
+`atanf()` and `atan2f()` have an error less than 1 ULP over all inputs.
 
 ### Build
 This project was built with Microchip Studio, and the project files

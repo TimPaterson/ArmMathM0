@@ -55,6 +55,7 @@ PREPROCESSING_SRCS +=  \
 ../src/double/drsub.s \
 ../src/double/dsub.s \
 ../src/double/sqrt.s \
+../src/float/asinf.s \
 ../src/float/atan2f.s \
 ../src/float/atantablef.s \
 ../src/float/cosf.s \
@@ -83,6 +84,7 @@ src/double/dop2_normalize.o \
 src/double/drsub.o \
 src/double/dsub.o \
 src/double/sqrt.o \
+src/float/asinf.o \
 src/float/atan2f.o \
 src/float/atantablef.o \
 src/float/cosf.o \
@@ -107,6 +109,7 @@ src/double/dop2_normalize.o \
 src/double/drsub.o \
 src/double/dsub.o \
 src/double/sqrt.o \
+src/float/asinf.o \
 src/float/atan2f.o \
 src/float/atantablef.o \
 src/float/cosf.o \
@@ -131,6 +134,7 @@ src/double/dop2_normalize.d \
 src/double/drsub.d \
 src/double/dsub.d \
 src/double/sqrt.d \
+src/float/asinf.d \
 src/float/atan2f.d \
 src/float/atantablef.d \
 src/float/cosf.d \
@@ -155,6 +159,7 @@ src/double/dop2_normalize.d \
 src/double/drsub.d \
 src/double/dsub.d \
 src/double/sqrt.d \
+src/float/asinf.d \
 src/float/atan2f.d \
 src/float/atantablef.d \
 src/float/cosf.d \
@@ -254,6 +259,13 @@ src/double/dsub.o: ../src/double/dsub.s
 	
 
 src/double/sqrt.o: ../src/double/sqrt.s
+	@echo Building file: $<
+	@echo Invoking: ARM/GNU Assembler : 6.3.1
+	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\arm\arm-gnu-toolchain\bin\arm-none-eabi-as.exe$(QUOTE) -mcpu=cortex-m0plus -mthumb -I "../src/include" -I "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\arm\CMSIS\5.4.0\CMSIS\Core\Include" -I "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\SAMC21_DFP\1.2.176\samc21\include"  -g   -o "$@" "$<" 
+	@echo Finished building: $<
+	
+
+src/float/asinf.o: ../src/float/asinf.s
 	@echo Building file: $<
 	@echo Invoking: ARM/GNU Assembler : 6.3.1
 	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\arm\arm-gnu-toolchain\bin\arm-none-eabi-as.exe$(QUOTE) -mcpu=cortex-m0plus -mthumb -I "../src/include" -I "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\arm\CMSIS\5.4.0\CMSIS\Core\Include" -I "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\SAMC21_DFP\1.2.176\samc21\include"  -g   -o "$@" "$<" 

@@ -26,9 +26,9 @@
 //
 // This simply calls __sinf, which return sinf() in r0 and cosf() in r1.
 
-FUNC_START	__sincosf, sincosf
+FUNC_START	__sincosfM0, sincosf
 	push	{r1, r2, lr}
-	bl	__sinf
+	bl	__sinfM0
 	pop	{r2, r3}
 	str	r0, [r2]
 	str	r1, [r3]

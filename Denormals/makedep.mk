@@ -22,6 +22,8 @@ src\double\dsub.s
 
 src\double\sqrt.s
 
+src\float\asinf.s
+
 src\float\atan2f.s
 
 src\float\atantablef.s
