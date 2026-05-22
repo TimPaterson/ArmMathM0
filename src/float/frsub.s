@@ -3,7 +3,7 @@
  * frsub.s
  *
  * Created: 9/17/2021
- *  Author: Tim
+ *  Author: Tim Paterson
  */
 
 .syntax unified

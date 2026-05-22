@@ -3,8 +3,8 @@
  * atantablef.s
  *
  * Created: 7/28/2023 12:40:29 PM
- *  Author: Tim
- */ 
+ *  Author: Tim Paterson
+ */
 
 .syntax unified
 .cpu cortex-m0plus
@@ -16,11 +16,11 @@
 .include "trigf.inc"
 
 
-// Tables of arc tangents for sinf() and atan2f() functions. Both 
+// Tables of arc tangents for sinf() and atan2f() functions. Both
 // functions switch to a table with higher precision when the
 // argument is small.
 //
-// The "p" notation used throughout is the position of the binary point 
+// The "p" notation used throughout is the position of the binary point
 // (p16 means there are 16 bits to the right).
 
 	.global	__fullAtanTable
@@ -35,17 +35,18 @@ __sineAtanTable:
 	.word	0x76B19C16
 	.word	0x3EB6EBF2
 	.word	0x1FD5BA9B
-	.word	0xFFAADDC
-	.word	0x7FF556F
-	.word	0x3FFEAAB
-	.word	0x1FFFD55
-	.word	0xFFFFAB
-	.word	0x7FFFF5
-	.word	0x3FFFFF
-	.word	0x200000
-	.word	0x100000
-	.word	0x80000
+	.word	0x0FFAADDC
+	.word	0x07FF556F
+	.word	0x03FFEAAB
+	.word	0x01FFFD55
+	.word	0x00FFFFAB
+	.word	0x007FFFF5
+	.word	0x003FFFFF
+	.word	0x00200000
+	.word	0x00100000
+	.word	0x00080000
 AtanTableEnd:
+	.word	0x00040000
 
 SmallAtanTable:
 	// tan(2^-i), i = 7 .. 13, p38
@@ -53,10 +54,10 @@ SmallAtanTable:
 SineSmallAtanTable:
 	.word	0x3FFFEAAB
 	.word	0x1FFFFD55
-	.word	0xFFFFFAB
-	.word	0x7FFFFF5
-	.word	0x3FFFFFF
-	.word	0x2000000
+	.word	0x0FFFFFAB
+	.word	0x07FFFFF5
+	.word	0x03FFFFFF
+	.word	0x02000000
 SmallAtanTableEnd:
 
 // Verify constants in trigf.inc

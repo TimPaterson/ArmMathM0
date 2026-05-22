@@ -2,12 +2,10 @@
  * trigf.inc
  *
  * Created: 7/17/2023 11:53:18 AM
- *  Author: Tim
- */ 
+ *  Author: Tim Paterson
+ */
 
 
-.set	TAN_X_EQUALS_X_EXP,	-12
-.set	COS_X_EQUALS_1_EXP,	-12
 .set	PI_MANTISSA,		0xC90FDAA2	// p30 for pi, p31 for pi/2, p32 for pi/4
 .set	PI_MANTISSA_LO,		0x2168C235	// next 32 bits
 .set	PI_MANTISSA_FLOAT,	((PI_MANTISSA >> (EXP_BITS32 - 1)) + 1) >> 1
@@ -16,9 +14,10 @@
 // for atan2f
 .set	ATAN_TABLE_ENTRIES,		14
 .set	ATAN_TABLE_END_OFFSET,		ATAN_TABLE_ENTRIES * 4
+.set	FULL_ATAN_TABLE_ENTRIES,	15
 .set	SMALL_ATAN_TABLE_ENTRIES,	7
-.set	SMALL_ATAN_TABLE_OFFSET,	ATAN_TABLE_ENTRIES * 4		// offset from __fullAtanTable
-.set	SMALL_ATAN_TABLE_END_OFFSET,	SMALL_ATAN_TABLE_ENTRIES * 4	// offset from AtanTableEnd
+.set	SMALL_ATAN_TABLE_OFFSET,	FULL_ATAN_TABLE_ENTRIES * 4	// offset from __fullAtanTable
+.set	SMALL_ATAN_TABLE_END_OFFSET,	(FULL_ATAN_TABLE_ENTRIES - ATAN_TABLE_ENTRIES + SMALL_ATAN_TABLE_ENTRIES) * 4	// offset from AtanTableEnd
 .set	SMALL_ATAN_TABLE_START_I,	ATAN_TABLE_ENTRIES - SMALL_ATAN_TABLE_ENTRIES
 .set	SMALL_ATAN_TABLE_SHIFT,		38 - 32
 

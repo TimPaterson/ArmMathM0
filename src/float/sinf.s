@@ -38,6 +38,8 @@
 // (p16 means there are 16 bits to the right).
 
 
+.set	COS_X_EQUALS_1_EXP,	-12
+
 .set	FINE_REDUCTION_MAX_BITS, 8
 .set	FINE_REDUCTION_MAX,	(1 << FINE_REDUCTION_MAX_BITS) - 1	// max multiples of pi/4 for lossless reduction
 .set	PI_HI,			PI_MANTISSA >> FINE_REDUCTION_MAX_BITS
@@ -261,7 +263,7 @@ FullyReduced:
 	// So the first rotation from the table is tan() == 0.25, a
 	// shift of 2 bits.
 
-	ldr	r1, =#SCALE
+	MOV_IMM	r1, SCALE
 	lsrs	r0, r1, #1
 	movs	r4, #SHIFT_START - 1	// we increment first thing
 	ldmia	r3!, {r5}		// tan() = 0.5 rotation

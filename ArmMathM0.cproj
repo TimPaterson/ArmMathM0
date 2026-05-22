@@ -68,6 +68,7 @@
         <armgcc.compiler.warnings.AllWarnings>True</armgcc.compiler.warnings.AllWarnings>
         <armgcc.linker.optimization.GarbageCollectUnusedSections>True</armgcc.linker.optimization.GarbageCollectUnusedSections>
         <armgcc.linker.memorysettings.ExternalRAM>False</armgcc.linker.memorysettings.ExternalRAM>
+        <armgcc.assembler.general.AssemblerFlags>--MD %24*.d</armgcc.assembler.general.AssemblerFlags>
         <armgcc.assembler.general.IncludePaths>
           <ListValues>
             <Value>../src/include</Value>
@@ -115,6 +116,7 @@ echo F|xcopy $(OutputDirectory)\$(OutputFileName)$(OutputFileExtension) $(MSBuil
         <armgcc.compiler.warnings.AllWarnings>True</armgcc.compiler.warnings.AllWarnings>
         <armgcc.linker.optimization.GarbageCollectUnusedSections>True</armgcc.linker.optimization.GarbageCollectUnusedSections>
         <armgcc.linker.memorysettings.ExternalRAM>False</armgcc.linker.memorysettings.ExternalRAM>
+        <armgcc.assembler.general.AssemblerFlags>--MD %24*.d</armgcc.assembler.general.AssemblerFlags>
         <armgcc.assembler.general.IncludePaths>
           <ListValues>
             <Value>../src/include</Value>
@@ -163,6 +165,7 @@ echo F|xcopy $(OutputDirectory)\$(OutputFileName)$(OutputFileExtension) $(MSBuil
         <armgcc.compiler.warnings.AllWarnings>True</armgcc.compiler.warnings.AllWarnings>
         <armgcc.linker.optimization.GarbageCollectUnusedSections>True</armgcc.linker.optimization.GarbageCollectUnusedSections>
         <armgcc.linker.memorysettings.ExternalRAM>False</armgcc.linker.memorysettings.ExternalRAM>
+        <armgcc.assembler.general.AssemblerFlags>--MD %24*.d</armgcc.assembler.general.AssemblerFlags>
         <armgcc.assembler.general.IncludePaths>
           <ListValues>
             <Value>../src/include</Value>
@@ -224,6 +227,9 @@ echo F|xcopy $(OutputDirectory)\$(OutputFileName)$(OutputFileExtension) $(MSBuil
     <Compile Include="src\double\sqrt.s">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\float\acosf.s">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\float\asinf.s">
       <SubType>compile</SubType>
     </Compile>
@@ -245,10 +251,16 @@ echo F|xcopy $(OutputDirectory)\$(OutputFileName)$(OutputFileExtension) $(MSBuil
     <Compile Include="src\float\fdiv.s">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\float\fixed_dividef.s">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\float\fmul.s">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\float\frsub.s">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\float\fsqrt1minusXsquared.s">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\float\sincosf.s">
