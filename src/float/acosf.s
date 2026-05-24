@@ -64,12 +64,23 @@
 	.func	acosf
 
 SmallInput:
-	// r0 = original input
+	// r1 = mantissa, MSB set in bit 31
+	// r2 = exponent + 1 (no bias)
+	// r3 = sign
 	// for small input, acos(x) = pi/2 - x
-	LOAD_FLOAT r1, 0, 0, PI_MANTISSA_FLOAT	// 0 sign, 0 exp. = pi/2
-	MOV_IMM	r2, 0x80000000
-	eors	r0, r2		// flip sign for subtract
-	b	__fadd
+	MOV_IMM	r0, PI_MANTISSA
+	lsrs	r1, r2		// align (to zero if shift count is large)
+	lsrs	r1, #1
+	// twos-complement of arg if signed
+	eors	r1, r3
+	subs	r1, r3
+	// pi/2 - x
+	subs	r0, r1		
+	// combine
+	MOV_IMM	r2, (EXP_BIAS32 - 1) << MANT_BITS32
+	lsrs	r0, #EXP_BITS32	// position mantissa
+	adcs	r0, r2		// combine exponent and rounding bit
+	pop	{r3-r7, pc}
 
 TooBig:
 	// r0 = original input
@@ -83,7 +94,7 @@ TooBig:
 ReturnNan:
 	MOV_IMM	r0, NAN32
 ReturnOp:
-	pop	{r3, r4-r7, pc}
+	pop	{r3-r7, pc}
 
 HugeInput:
 	// r0 = original input
@@ -99,7 +110,7 @@ HugeInput:
 	cmp	r3, #0
 	beq	ReturnOp	// return 0
 	LOAD_FLOAT r0, 0, 1, PI_MANTISSA_FLOAT	// 0 sign, 1 exp. = pi
-	pop	{r3, r4-r7, pc}
+	pop	{r3-r7, pc}
 
 LargeInput:
 	// For values close to 1, use formula:
@@ -128,17 +139,15 @@ __AcosReentry:
 	// r1 = mantissa p32
 	// r2 = exponent (no bias)
 	movs	r3, #0		// positive sign
-	push	{r3, r4-r7, lr}
+	push	{r3-r7, lr}
 	b	NormInput
 
 
 ENTRY_POINT	__acosfM0, acosf
+	asrs	r3, r0, #31		// save input sign
+	push	{r3-r7, lr}
 	lsls	r2, r0, #1		// clear input sign
 	lsrs	r2, #MANT_BITS32 + 1	// isolate exponent
-	cmp	r2, #EXP_BIAS32 + ACOS_X_EQUALS_PI_OVER_2_MINUS_X_EXP
-	ble	SmallInput
-	asrs	r3, r0, #31		// save input sign
-	push	{r3, r4-r7, lr}
 	lsls	r4, r0, #EXP_BITS32	// isolate mantissa
 	MOV_IMM	r1, 0x80000000		// implied bit position
 	orrs	r1, r4
@@ -156,8 +165,11 @@ ENTRY_POINT	__acosfM0, acosf
 NormInput:
 	// r1 = mantissa, MSB set in bit 31
 	// r2 = exponent + 1 (no bias)
-	lsrs	r3, r1, #2	// p30
+	// r3 = sign
 	negs	r2, r2		// -exponent - 1
+	cmp	r2, #-ACOS_X_EQUALS_PI_OVER_2_MINUS_X_EXP - 1
+	bgt	SmallInput
+	lsrs	r3, r1, #2	// p30
 	lsrs	r3, r2
 	movs	r1, #0		// y = 0
 	MOV_IMM	r0, 0x40000000	// x = 1 p30

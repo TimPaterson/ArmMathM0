@@ -114,7 +114,7 @@ ReturnOp:
 	// r0 = original input
 	// r1 = mantissa, MSB set
 	// r2 = biased exponent
-	pop	{r3, r4-r7, pc}
+	pop	{r3-r7, pc}
 
 HugeInput:
 	// r0 = original input
@@ -130,7 +130,7 @@ HugeInput:
 	LOAD_FLOAT	r0, 0, 0, PI_MANTISSA_FLOAT	// 0 sign, 0 exp. = PI/2
 	lsls	r3, #31		// sign to MSB
 	orrs	r0, r3
-	pop	{r2, r4-r7, pc}
+	pop	{r3-r7, pc}
 
 LargeInput:
 	// r1 = mantissa, MSB set in bit 31
@@ -145,8 +145,8 @@ __AsinReentry:
 	// r1 = mantissa p32
 	// r2 = exponent + 1 (no bias)
 	movs	r3, #0		// positive sign
-	push	{r3, r4-r7, lr}
-	// Combine in case its small. This is used when it's small
+	push	{r3-r7, lr}
+	// Combine in case it's small. This is used when it's small
 	// enough that sin(x) = x within float precision. However,
 	// sin(x) > x, so we round up at the end.
 	movs	r3, r2
@@ -160,7 +160,7 @@ __AsinReentry:
 
 ENTRY_POINT	__asinfM0, asinf
 	asrs	r3, r0, #31		// save input sign
-	push	{r3, r4-r7, lr}
+	push	{r3-r7, lr}
 	lsls	r2, r0, #1		// clear input sign
 	lsrs	r2, #MANT_BITS32 + 1	// isolate exponent
 	lsls	r4, r0, #EXP_BITS32	// isolate mantissa

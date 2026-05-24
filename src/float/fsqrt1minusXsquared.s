@@ -82,9 +82,7 @@ StillNorm:
 	// r3 = guess p7, accurate to 4 bits
 	lsrs	r0, r1, #12	// x p18
 	muls	r0, r3		// x*y, p25
-	muls	r0, r3		// x*y^2 p32
-	// As described above, we now view r0 as signed and really have
-	// x*y^2 - 1, p32
+	muls	r0, r3		// x*y^2 32 = x*y^2 - 1 p32
 	asrs	r0, #9		// p23
 	muls	r0, r3		// y*(x*y^2 - 1) p30 = y*(x*y^2 - 1)/2 p31
 	lsls	r3, #24		// y p31
@@ -96,13 +94,13 @@ StillNorm:
 	muls	r0, r0		// y^2 p30
 	lsrs	r0, #13		// y^2 p17
 	lsrs	r4, r1, #15	// x p15
-	muls	r0, r4		// x*y^2 p32
+	muls	r0, r4		// x*y^2 = x*y^2 - 1 p32
 	asrs	r0, #10		// p22
 	muls	r0, r3		// y*(x*y^2 - 1) p37 = y*(x*y^2 - 1)/2 p38
 	asrs	r0, #23		// p15
 	subs	r3, r0		// y - y*(x*y^2 - 1)/2 p15
 
-	// For the third iteration, we refactor again, taking into account
+	// For the third iteration we refactor, taking into account
 	// we don't want y (the next guess), but x*y (the actual root).
 	// So it becomes:
 	//
