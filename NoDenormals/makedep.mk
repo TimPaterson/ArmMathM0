@@ -46,6 +46,10 @@ src\float\frsub.s
 
 src\float\fsqrt1minusXsquared.s
 
+src\float\logf.s
+
+src\float\logtablef.s
+
 src\float\sincosf.s
 
 src\float\sinf.s

@@ -67,6 +67,8 @@ PREPROCESSING_SRCS +=  \
 ../src/float/fmul.s \
 ../src/float/frsub.s \
 ../src/float/fsqrt1minusXsquared.s \
+../src/float/logf.s \
+../src/float/logtablef.s \
 ../src/float/sincosf.s \
 ../src/float/sinf.s \
 ../src/float/sqrtf.s \
@@ -99,6 +101,8 @@ src/float/fixed_dividef.o \
 src/float/fmul.o \
 src/float/frsub.o \
 src/float/fsqrt1minusXsquared.o \
+src/float/logf.o \
+src/float/logtablef.o \
 src/float/sincosf.o \
 src/float/sinf.o \
 src/float/sqrtf.o \
@@ -127,6 +131,8 @@ src/float/fixed_dividef.o \
 src/float/fmul.o \
 src/float/frsub.o \
 src/float/fsqrt1minusXsquared.o \
+src/float/logf.o \
+src/float/logtablef.o \
 src/float/sincosf.o \
 src/float/sinf.o \
 src/float/sqrtf.o \
@@ -155,6 +161,8 @@ src/float/fixed_dividef.d \
 src/float/fmul.d \
 src/float/frsub.d \
 src/float/fsqrt1minusXsquared.d \
+src/float/logf.d \
+src/float/logtablef.d \
 src/float/sincosf.d \
 src/float/sinf.d \
 src/float/sqrtf.d \
@@ -183,6 +191,8 @@ src/float/fixed_dividef.d \
 src/float/fmul.d \
 src/float/frsub.d \
 src/float/fsqrt1minusXsquared.d \
+src/float/logf.d \
+src/float/logtablef.d \
 src/float/sincosf.d \
 src/float/sinf.d \
 src/float/sqrtf.d \
@@ -358,6 +368,20 @@ src/float/frsub.o: ../src/float/frsub.s
 	
 
 src/float/fsqrt1minusXsquared.o: ../src/float/fsqrt1minusXsquared.s
+	@echo Building file: $<
+	@echo Invoking: ARM/GNU Assembler : 6.3.1
+	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\arm\arm-gnu-toolchain\bin\arm-none-eabi-as.exe$(QUOTE) -mcpu=cortex-m0plus -mthumb --MD $*.d -I "../src/include" -I "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\arm\CMSIS\5.4.0\CMSIS\Core\Include" -I "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\SAMC21_DFP\1.2.176\samc21\include"  -g   -o "$@" "$<" 
+	@echo Finished building: $<
+	
+
+src/float/logf.o: ../src/float/logf.s
+	@echo Building file: $<
+	@echo Invoking: ARM/GNU Assembler : 6.3.1
+	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\arm\arm-gnu-toolchain\bin\arm-none-eabi-as.exe$(QUOTE) -mcpu=cortex-m0plus -mthumb --MD $*.d -I "../src/include" -I "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\arm\CMSIS\5.4.0\CMSIS\Core\Include" -I "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\SAMC21_DFP\1.2.176\samc21\include"  -g   -o "$@" "$<" 
+	@echo Finished building: $<
+	
+
+src/float/logtablef.o: ../src/float/logtablef.s
 	@echo Building file: $<
 	@echo Invoking: ARM/GNU Assembler : 6.3.1
 	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\arm\arm-gnu-toolchain\bin\arm-none-eabi-as.exe$(QUOTE) -mcpu=cortex-m0plus -mthumb --MD $*.d -I "../src/include" -I "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\arm\CMSIS\5.4.0\CMSIS\Core\Include" -I "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\SAMC21_DFP\1.2.176\samc21\include"  -g   -o "$@" "$<" 
