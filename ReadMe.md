@@ -1,20 +1,18 @@
 # Fast, Compact Floating Point Math for ARM Cortex-M0+
-### *Now includes float trig functions*
-In the first step exanding beyond simple arithmetic, ArmMathM0 now includes
-`sinf()`, `cosf()`, `sincosf()`, `tanf()`, `asinf()`, `acosf()`, `atanf()`, and `atan2f()`.
+### *Recently added: logf(), asinf(), acosf()*
 
 ### Introduction
-ArmMathM0 is a ready-to-link library (GNU archive) of floating-point math 
-for ARM Cortex-M0 and M0+ that replaces the functions provided by the compiler.
-Compared to the math library included with GCC, this library is both faster 
+ArmMathM0 is a ready-to-link library (GNU archive) of floating-point math
+for ARM Cortex-M0 and M0+ that replaces the functions provided with the compiler.
+Compared to the math library included with GCC, this library is both faster
 and smaller.
 
 ArmMathM0 includes add, subtract, multiply, divide and square
-root for both float and double. It also has float implementations for
+root for both float and double. It also has float implementations for `logf()`,
 `sinf()`, `cosf()`, `sincosf()`, `tanf()`, `asinf()`, `acosf()`, `atanf()`, and `atan2f()`.
-The plan is to build out the float functions (exp, log, etc.) before
+The plan is to build out the float functions before
 implementing these functions for double. The higher functions in the
-standard library are built on floating-point arithmetic, so those original 
+standard library are built on floating-point arithmetic, so those original
 functions will go faster with ArmMathM0 arithmetic (roughly 2x).
 
 ArmMathM0 has full support for Infinity and NAN, with support for denormal
@@ -24,14 +22,14 @@ arithmetic.
 
 ### Accuracy
 All arithmetic (including square root) provides the exact or closest representable
-result. This means the maximum error is 0.5 *unit last place* (ULP), which happens if the exact
-answer is at the midpoint between two adjacent representable values.
+result. This means the maximum error is 0.5 *unit last place* (ULP), which happens 
+if the exact answer is at the midpoint between two adjacent representable values.
 
-`sinf()`, `cosf()`, `sincosf()` functions have an error of less than 1 ULP. 
-This means when the exact result is between two adjacent representable values, 
-it might not choose the closest one. This accuracy is valid for inputs up to ±200 radians.
-`tanf()`, computed from sin/cos, has a max error of a little over 2 ULP in that range.
-`asinf()`, `acosf()`, `atanf()` and `atan2f()` have an error less than 1 ULP.
+All transcendental functions have an error of less than 1 ULP. This means when 
+the exact result is between two adjacent representable values, it might not 
+choose the closest one. An exception is `tanf()`, computed from sin/cos, which 
+has a max error of a little over 2 ULP. Accuracy for trig functions is valid 
+for inputs up to ±200 radians.
 
 ### Build
 This project was built with Microchip Studio, and the project files
