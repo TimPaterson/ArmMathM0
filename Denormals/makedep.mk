@@ -52,6 +52,8 @@ src\float\logtablef.s
 
 src\float\sincosf.s
 
+src\float\sincosf_calc.s
+
 src\float\sinf.s
 
 src\float\sqrtf.s

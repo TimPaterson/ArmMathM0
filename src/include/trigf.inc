@@ -5,9 +5,11 @@
  *  Author: Tim Paterson
  */
 
+.include "options.inc"
 
 .set	PI_MANTISSA,		0xC90FDAA2	// p30 for pi, p31 for pi/2, p32 for pi/4
-.set	PI_MANTISSA_LO,		0x2168C235	// next 32 bits
+.set	PI_MANTISSA_LO,		0x2168C234	// next 32 bits
+.set	PI_MANTISSA_EXTRA,	0xC4C6628B
 .set	PI_MANTISSA_FLOAT,	((PI_MANTISSA >> (EXP_BITS32 - 1)) + 1) >> 1
 .set	ONE_OVER_PI_MANTISSA,	0xa2f9836E	// p33 for 1/pi, p31 for 4/pi
 
@@ -26,3 +28,11 @@
 .set	SINE_TABLE_END_OFFSET,		SINE_ATAN_TABLE_ENTRIES * 4
 .set	SMALL_SINE_ATAN_TABLE_ENTRIES,	SMALL_ATAN_TABLE_ENTRIES - 1
 .set	SMALL_SINE_ATAN_TABLE_OFFSET,	SMALL_ATAN_TABLE_OFFSET	// offset from __sineAtanTable
+
+.set	COS_X_EQUALS_1_EXP,		-12
+
+.ifdef WIDE_TRIG_RANGE
+.set	SINE_MAX_VALID_EXP,		14	// less than 2^15 radians allowed
+.else
+.set	SINE_MAX_VALID_EXP,		7	// less than 2^8 radians allowed
+.endif

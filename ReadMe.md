@@ -7,7 +7,7 @@ for ARM Cortex-M0 and M0+ that replaces the functions provided with the compiler
 Compared to the math library included with GCC, this library is both faster
 and smaller.
 
-ArmMathM0 includes add, subtract, multiply, divide and square
+ArmMathM0 includes add, subtract, multiply, divide, and square
 root for both float and double. It also has float implementations for `logf()`,
 `sinf()`, `cosf()`, `sincosf()`, `tanf()`, `asinf()`, `acosf()`, `atanf()`, and `atan2f()`.
 The plan is to build out the float functions before
@@ -27,9 +27,8 @@ if the exact answer is at the midpoint between two adjacent representable values
 
 All transcendental functions have an error of less than 1 ULP. This means when 
 the exact result is between two adjacent representable values, it might not 
-choose the closest one. An exception is `tanf()`, computed from sin/cos, which 
-has a max error of a little over 2 ULP. Accuracy for trig functions is valid 
-for inputs up to ±200 radians.
+choose the closest one. Accuracy for trig functions is valid for inputs up to 
+±255 radians.
 
 ### Build
 This project was built with Microchip Studio, and the project files

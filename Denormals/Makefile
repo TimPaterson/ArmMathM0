@@ -70,6 +70,7 @@ PREPROCESSING_SRCS +=  \
 ../src/float/logf.s \
 ../src/float/logtablef.s \
 ../src/float/sincosf.s \
+../src/float/sincosf_calc.s \
 ../src/float/sinf.s \
 ../src/float/sqrtf.s \
 ../src/float/tanf.s
@@ -104,6 +105,7 @@ src/float/fsqrt1minusXsquared.o \
 src/float/logf.o \
 src/float/logtablef.o \
 src/float/sincosf.o \
+src/float/sincosf_calc.o \
 src/float/sinf.o \
 src/float/sqrtf.o \
 src/float/tanf.o
@@ -134,6 +136,7 @@ src/float/fsqrt1minusXsquared.o \
 src/float/logf.o \
 src/float/logtablef.o \
 src/float/sincosf.o \
+src/float/sincosf_calc.o \
 src/float/sinf.o \
 src/float/sqrtf.o \
 src/float/tanf.o
@@ -164,6 +167,7 @@ src/float/fsqrt1minusXsquared.d \
 src/float/logf.d \
 src/float/logtablef.d \
 src/float/sincosf.d \
+src/float/sincosf_calc.d \
 src/float/sinf.d \
 src/float/sqrtf.d \
 src/float/tanf.d
@@ -194,6 +198,7 @@ src/float/fsqrt1minusXsquared.d \
 src/float/logf.d \
 src/float/logtablef.d \
 src/float/sincosf.d \
+src/float/sincosf_calc.d \
 src/float/sinf.d \
 src/float/sqrtf.d \
 src/float/tanf.d
@@ -389,6 +394,13 @@ src/float/logtablef.o: ../src/float/logtablef.s
 	
 
 src/float/sincosf.o: ../src/float/sincosf.s
+	@echo Building file: $<
+	@echo Invoking: ARM/GNU Assembler : 6.3.1
+	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\arm\arm-gnu-toolchain\bin\arm-none-eabi-as.exe$(QUOTE) -mcpu=cortex-m0plus -mthumb --MD $*.d -I "../src/include" -I "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\arm\CMSIS\5.4.0\CMSIS\Core\Include" -I "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\SAMC21_DFP\1.2.176\samc21\include"  -g   -o "$@" "$<" 
+	@echo Finished building: $<
+	
+
+src/float/sincosf_calc.o: ../src/float/sincosf_calc.s
 	@echo Building file: $<
 	@echo Invoking: ARM/GNU Assembler : 6.3.1
 	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\arm\arm-gnu-toolchain\bin\arm-none-eabi-as.exe$(QUOTE) -mcpu=cortex-m0plus -mthumb --MD $*.d -I "../src/include" -I "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\arm\CMSIS\5.4.0\CMSIS\Core\Include" -I "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\SAMC21_DFP\1.2.176\samc21\include"  -g   -o "$@" "$<" 
