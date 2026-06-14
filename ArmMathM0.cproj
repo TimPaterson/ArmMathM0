@@ -291,6 +291,9 @@ echo F|xcopy $(OutputDirectory)\$(OutputFileName)$(OutputFileExtension) $(MSBuil
     <Compile Include="src\float\cosf.s">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\float\expf.s">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\float\faddsub.s">
       <SubType>compile</SubType>
     </Compile>

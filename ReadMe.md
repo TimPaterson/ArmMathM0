@@ -1,5 +1,5 @@
 # Fast, Compact Floating Point Math for ARM Cortex-M0+
-### *Recently added: logf(), asinf(), acosf()*
+### *Recently added: expf(), logf(), asinf(), acosf()*
 
 ### Introduction
 ArmMathM0 is a ready-to-link library (GNU archive) of floating-point math
@@ -8,8 +8,9 @@ Compared to the math library included with GCC, this library is both faster
 and smaller.
 
 ArmMathM0 includes add, subtract, multiply, divide, and square
-root for both float and double. It also has float implementations for `logf()`,
-`sinf()`, `cosf()`, `sincosf()`, `tanf()`, `asinf()`, `acosf()`, `atanf()`, and `atan2f()`.
+root for both float and double. It also has float implementations for 
+`expf()`, `logf()`, `sinf()`, `cosf()`, `sincosf()`, `tanf()`, `asinf()`, 
+`acosf()`, `atanf()`, and `atan2f()`.
 The plan is to build out the float functions before
 implementing these functions for double. The higher functions in the
 standard library are built on floating-point arithmetic, so those original

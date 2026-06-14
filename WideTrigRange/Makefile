@@ -60,6 +60,7 @@ PREPROCESSING_SRCS +=  \
 ../src/float/atan2f.s \
 ../src/float/atantablef.s \
 ../src/float/cosf.s \
+../src/float/expf.s \
 ../src/float/faddsub.s \
 ../src/float/fdenormal_result.s \
 ../src/float/fdiv.s \
@@ -95,6 +96,7 @@ src/float/asinf.o \
 src/float/atan2f.o \
 src/float/atantablef.o \
 src/float/cosf.o \
+src/float/expf.o \
 src/float/faddsub.o \
 src/float/fdenormal_result.o \
 src/float/fdiv.o \
@@ -126,6 +128,7 @@ src/float/asinf.o \
 src/float/atan2f.o \
 src/float/atantablef.o \
 src/float/cosf.o \
+src/float/expf.o \
 src/float/faddsub.o \
 src/float/fdenormal_result.o \
 src/float/fdiv.o \
@@ -157,6 +160,7 @@ src/float/asinf.d \
 src/float/atan2f.d \
 src/float/atantablef.d \
 src/float/cosf.d \
+src/float/expf.d \
 src/float/faddsub.d \
 src/float/fdenormal_result.d \
 src/float/fdiv.d \
@@ -188,6 +192,7 @@ src/float/asinf.d \
 src/float/atan2f.d \
 src/float/atantablef.d \
 src/float/cosf.d \
+src/float/expf.d \
 src/float/faddsub.d \
 src/float/fdenormal_result.d \
 src/float/fdiv.d \
@@ -324,6 +329,13 @@ src/float/atantablef.o: ../src/float/atantablef.s
 	
 
 src/float/cosf.o: ../src/float/cosf.s
+	@echo Building file: $<
+	@echo Invoking: ARM/GNU Assembler : 6.3.1
+	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\arm\arm-gnu-toolchain\bin\arm-none-eabi-as.exe$(QUOTE) -mcpu=cortex-m0plus -mthumb --MD $*.d -I "../src/include" -I "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\arm\CMSIS\5.4.0\CMSIS\Core\Include" -I "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\SAMC21_DFP\1.2.176\samc21\include"  -g   -o "$@" "$<" 
+	@echo Finished building: $<
+	
+
+src/float/expf.o: ../src/float/expf.s
 	@echo Building file: $<
 	@echo Invoking: ARM/GNU Assembler : 6.3.1
 	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\arm\arm-gnu-toolchain\bin\arm-none-eabi-as.exe$(QUOTE) -mcpu=cortex-m0plus -mthumb --MD $*.d -I "../src/include" -I "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\arm\CMSIS\5.4.0\CMSIS\Core\Include" -I "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\SAMC21_DFP\1.2.176\samc21\include"  -g   -o "$@" "$<" 

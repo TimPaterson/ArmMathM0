@@ -32,6 +32,8 @@ src\float\atantablef.s
 
 src\float\cosf.s
 
+src\float\expf.s
+
 src\float\faddsub.s
 
 src\float\fdenormal_result.s

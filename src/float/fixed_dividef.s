@@ -12,21 +12,6 @@
 .include "macros.inc"
 
 
-.set	GuessBase,	8
-.set	GuessMax,	63	// max < 4
-
-.macro	CalcGuess	index, max
-	.byte		(0x2000/((\index) + (\index) + 1) + 1) / 2
-.if	(\index) < \max
-	CalcGuess	(\index) + 1, \max
-.endif
-.endm
-
-ReciprocalGuess:
-	CalcGuess	GuessBase, GuessMax
-	.align	1
-
-
 	.global	__fixed_dividef
 
 //*********************************************************************
@@ -42,6 +27,10 @@ ReciprocalGuess:
 //
 //*********************************************************************
 
+.set	GuessBase,	8
+.set	GuessMax,	63	// max < 4
+
+
 	.func	__fixed_dividef
 __fixed_dividef:
 	// r0 = y (dividend)
@@ -50,7 +39,7 @@ __fixed_dividef:
 	// First compute 1/x for 0.5 < x < 4. That's a wide range so
 	// we'll use a lookup table to get an estimate for Newton-Raphson
 	// iteration of reciprocal.
-	ldr	r3, =#ReciprocalGuess - GuessBase
+	adr	r3, ReciprocalGuess - GuessBase
 	lsrs	r2, r1, #32 - 6	// use top 6 bits
 	ldrb	r2, [r2, r3]	// guess accurate to 4 bits p7
 
@@ -127,3 +116,15 @@ __fixed_dividef:
 	bx	lr
 
 	.endfunc
+
+
+.macro	CalcGuess	index, max
+	.byte		(0x2000/((\index) + (\index) + 1) + 1) / 2
+.if	(\index) < \max
+	CalcGuess	(\index) + 1, \max
+.endif
+.endm
+
+	.align	2
+ReciprocalGuess:
+	CalcGuess	GuessBase, GuessMax

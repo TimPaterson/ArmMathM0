@@ -27,7 +27,7 @@
 // and find its log by summing the (pre-calculated) logs of those factors.
 //
 // The input is restricted to 1 <= x < 2 (the definition of the mantissa).
-// The factors are 1 + 2^k, k starting at 1; implemented as m + (m >> k).
+// The factors are 1 + 2^-k, k starting at 1; implemented as m + (m >> k).
 //
 // for (m = 1, k = 1, s = 0; k < kmax; k++)
 // {
@@ -84,11 +84,15 @@ Denormal:
 ENTRY_POINT	__logfM0, logf
 	push	{r4-r6, lr}
 	lsls	r1, r0, #1		// clear input sign
+.ifndef NO_DENORMALS
 	beq	ReturnMinusInf		// must not be zero
+.endif
 	bcs	ReturnNan		// must not be negative
 	lsrs	r1, #MANT_BITS32 + 1	// input exponent
 .ifndef NO_DENORMALS
 	beq	Denormal
+.else
+	beq	ReturnMinusInf		// must not be zero
 .endif
 	cmp	r1, #EXP_SPECIAL32
 	beq	Exit		// return NAN or +Infinity
